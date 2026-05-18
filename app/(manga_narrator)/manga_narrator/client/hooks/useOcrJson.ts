@@ -31,14 +31,16 @@ export function useOcrJson(json_file: MediaRef | null) {
             .catch(() => toast(`${EMOJI.warn} Failed to save updated json.`))
     }
 
-    const savePreview = () => {
+    const savePreview = async () => {
         if (!data) return
-        saveVideoPreview(data)
-            .then(() => toast(`${EMOJI.success} Saved preview successfully.`))
-            .catch((data) => {
-                console.log("error", data)
-                toast(`${EMOJI.warn} Failed to save preview json.`)
-            })
+        try {
+            await saveVideoPreview(data)
+            toast(`${EMOJI.success} Saved preview successfully.`)
+        } catch (err) {
+            console.log("error", err)
+            toast(`${EMOJI.warn} Failed to save preview json.`)
+            throw err
+        }
     }
 
     // runs once on load and on every render

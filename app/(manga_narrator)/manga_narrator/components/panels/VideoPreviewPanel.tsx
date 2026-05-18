@@ -1,5 +1,5 @@
-import { DialoguePreviewOut, ImagePreviewOut } from "../../types/video_api_types"
-import PanPreview from "../preview/PanPreview"
+import type { ImagePreviewEditor } from "../../types/videoPreviewEditor";
+import { resolveMediaRef } from "../../utils/helpers";
 
 export default function VideoPreviewPanel({
     runId,
@@ -35,19 +35,17 @@ export default function VideoPreviewPanel({
 
             {imagePreviews && (
                 <div className="mt-6 space-y-10">
-                    {imagePreviews.map((image: ImagePreviewOut) => (
-                        <div key={image.image_file_name}>
+                    {imagePreviews.map((image: ImagePreviewEditor) => (
+                        <div key={image.image_id}>
                             <h3 className="text-lg font-semibold mb-3">
-                                🖼 {image.image_file_name}
+                                🖼 Image {image.image_id}
                             </h3>
 
-                            {image.previews.map((dlgpreview: DialoguePreviewOut) => (
-                                <PanPreview
-                                    key={dlgpreview.dialogue_id}
-                                    imagePreview={image}
-                                    dialoguePreview={dlgpreview}
-                                />
-                            ))}
+                            <video
+                                src={resolveMediaRef(image.out_file_ref)}
+                                controls
+                                className="w-full max-w-xl rounded border border-zinc-700 bg-black"
+                            />
                         </div>
                     ))}
                 </div>

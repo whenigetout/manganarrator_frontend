@@ -1,4 +1,3 @@
-import { MediaRef } from "../../types/manga_narrator_django_api_types"
 import { BrowserState } from "../../types/BrowserState"
 
 interface InputPathBreadcrumbProps {

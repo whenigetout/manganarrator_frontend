@@ -1,6 +1,6 @@
-import type { ImagePreviewOut } from '@/app/manga_narrator/types/video_api_types'
+import type { ImagePreviewEditor } from "../types/videoPreviewEditor";
 
-export async function fetchVideoPreviews(runId: string): Promise<ImagePreviewOut[]> {
+export async function fetchVideoPreviews(runId: string): Promise<ImagePreviewEditor[]> {
     const VIDEO_API = process.env.NEXT_PUBLIC_VIDEO_API as string
 
     const res = await fetch(
@@ -12,5 +12,5 @@ export async function fetchVideoPreviews(runId: string): Promise<ImagePreviewOut
         throw new Error("Failed to load video previews")
     }
 
-    return res.json(); // inferred as ImagePreviewOut[]
+    return res.json();
 }

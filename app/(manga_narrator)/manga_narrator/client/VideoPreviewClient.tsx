@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { fetchVideoPreviews } from "../server/fetchVideoPreviews"
-import { ImagePreviewOut } from "../types/video_api_types"
+import type { ImagePreviewEditor } from "../types/videoPreviewEditor"
 import VideoPreviewPanel from "../components/panels/VideoPreviewPanel"
 
 export default function VideoPreviewClient() {
     const [runId, setRunId] = useState("")
-    const [imagePreviews, setImagePreviews] = useState<ImagePreviewOut[] | null>(null)
+    const [imagePreviews, setImagePreviews] = useState<ImagePreviewEditor[] | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -20,8 +20,8 @@ export default function VideoPreviewClient() {
         try {
             const previews = await fetchVideoPreviews(runId)
             setImagePreviews(previews)
-        } catch (err: any) {
-            setError(err.message)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to load video previews")
         } finally {
             setLoading(false)
         }

@@ -1,12 +1,9 @@
 import React from "react";
-import type {
-    ImagePreview,
-    SegmentPreview,
-} from "@manganarrator/contracts"
+import type { ImagePreviewEditor } from "../../types/videoPreviewEditor";
 import { resolveMediaRef, fileNameFromMediaRef } from "../../utils/helpers";
 
 interface ImageSegmentPreviewProps {
-    imagePreview: ImagePreview;
+    imagePreview: ImagePreviewEditor;
     activeIdx: number;
     onPrev: () => void;
     onNext: () => void;

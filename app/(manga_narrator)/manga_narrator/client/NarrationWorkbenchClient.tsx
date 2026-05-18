@@ -6,7 +6,7 @@ interface NarrationWorkbenchClientProps {
     ocrJsonData: OCRRun
     dispatchEdit: (action: EditAction) => void
     saveJson: () => void
-    savePreview: () => void
+    savePreview: () => Promise<void>
 }
 
 export const NarrationWorkbenchClient = ({
@@ -18,7 +18,6 @@ export const NarrationWorkbenchClient = ({
 
     return (
         <div className="mt-12 border-t pt-6">
-            NarrationWorkbenchClient
             <OcrJsonResult
                 jsonResponse={ocrJsonData}
                 dispatchEdit={dispatchEdit}

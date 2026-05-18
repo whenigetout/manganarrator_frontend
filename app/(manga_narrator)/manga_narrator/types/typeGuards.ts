@@ -1,6 +1,6 @@
-import { VideoPreview } from "@manganarrator/contracts";
+import { VideoPreviewEditor } from "./videoPreviewEditor";
 
-export const isVideoPreview = (v: unknown): v is VideoPreview => {
+export const isVideoPreview = (v: unknown): v is VideoPreviewEditor => {
     if (typeof v !== "object" || v === null) return false;
 
     const vp = v as Record<string, unknown>;
