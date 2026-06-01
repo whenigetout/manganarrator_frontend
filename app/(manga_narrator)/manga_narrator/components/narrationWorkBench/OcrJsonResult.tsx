@@ -10,6 +10,7 @@ import { createEmptyAudioLayer, useVideoPreviewJson } from "../../client/hooks/u
 import { RunPreviewControls } from "./previewEditor/RunPreviewControls"
 import type { VideoPreviewEditor } from "../../types/videoPreviewEditor"
 import { MediaNamespace } from "@manganarrator/contracts"
+import { useAudioReadiness } from "../../client/hooks/useAudioReadiness"
 
 interface OcrJsonResultProps {
     jsonResponse: OCRRun
@@ -27,6 +28,7 @@ export const OcrJsonResult = ({
         data: videoPreview,
         imgPrwById,
         jobs,
+        mediaVersion,
         updatePreview,
         saveEdits,
         buildSegment,
@@ -37,6 +39,12 @@ export const OcrJsonResult = ({
 
     const [selectionName, setSelectionName] = useState("selected-part")
     const [busyLabel, setBusyLabel] = useState<string | null>(null)
+    const [showMissingOnly, setShowMissingOnly] = useState(false)
+    const {
+        missingAudio,
+        missingDialogueIds,
+        refresh: refreshAudioReadiness,
+    } = useAudioReadiness(jsonResponse)
 
     const [currentProgress, setCurrentProgress] = useState<{
         imageId: number
@@ -190,6 +198,11 @@ export const OcrJsonResult = ({
                 selectionName={selectionName}
                 onSelectionNameChange={setSelectionName}
                 busyLabel={busyLabel}
+                mediaVersion={mediaVersion}
+                missingAudioCount={missingAudio.length}
+                onRefreshAudioReadiness={refreshAudioReadiness}
+                showMissingOnly={showMissingOnly}
+                onToggleShowMissingOnly={() => setShowMissingOnly(prev => !prev)}
                 jobs={jobs}
                 onSaveEdits={() => runBusy("save-preview-edits", saveEdits)}
                 onBuildSelection={() => runBusy("build-selected-part", async () => {
@@ -226,6 +239,9 @@ export const OcrJsonResult = ({
                     imagePreview={imgPrwById?.get(image.image_id) ?? null}
                     updateImagePreview={(updater) => updateImagePreview(image.image_id, updater)}
                     saveEditedPreview={() => runBusy(`save-image-preview-${image.image_id}`, saveEdits)}
+                    mediaVersion={mediaVersion}
+                    missingDialogueIds={missingDialogueIds}
+                    showMissingOnly={showMissingOnly}
                     buildSegmentPreview={async (segmentPreview) => {
                         await runBusy(`build-segment-${segmentPreview.rendered_segment.segment.segment_id}`, async () => {
                             await buildSegment(segmentPreview)

@@ -34,6 +34,7 @@ export function AudioLayerEditor({
                     type="button"
                     onClick={onAdd}
                     className="rounded bg-emerald-700 px-2 py-1 text-xs text-white hover:bg-emerald-600"
+                    title="Attach another background music track or short sound effect at this scope."
                 >
                     Add Audio
                 </button>
@@ -62,6 +63,7 @@ export function AudioLayerEditor({
                             },
                         })}
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100"
+                        title="Choose whether this audio file lives under the shared inputs or outputs media tree."
                     >
                         <option value={MediaNamespace.INPUTS}>inputs</option>
                         <option value={MediaNamespace.OUTPUTS}>outputs</option>
@@ -76,6 +78,7 @@ export function AudioLayerEditor({
                         })}
                         placeholder="Relative audio path"
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100 md:col-span-2"
+                        title="Relative path to the audio file under the selected media namespace."
                     />
                     <input
                         type="number"
@@ -84,6 +87,7 @@ export function AudioLayerEditor({
                         onChange={(e) => updateLayer(layer.id, { start_at: Number(e.target.value) })}
                         placeholder="Start"
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100"
+                        title="Start offset, in seconds, within this segment/image/chapter timeline."
                     />
                     <input
                         type="number"
@@ -92,6 +96,7 @@ export function AudioLayerEditor({
                         onChange={(e) => updateLayer(layer.id, { volume: Number(e.target.value) })}
                         placeholder="Volume"
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100"
+                        title="Playback gain multiplier for this layer. Use 1 for normal volume."
                     />
 
                     <input
@@ -101,6 +106,7 @@ export function AudioLayerEditor({
                         onChange={(e) => updateLayer(layer.id, { trim_start_sec: Number(e.target.value) })}
                         placeholder="Trim start"
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100"
+                        title="Trim away the beginning of the source audio before playback."
                     />
                     <input
                         type="number"
@@ -111,6 +117,7 @@ export function AudioLayerEditor({
                         })}
                         placeholder="Trim end"
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100"
+                        title="Optional trim end, in seconds, for the source audio."
                     />
                     <input
                         type="number"
@@ -119,6 +126,7 @@ export function AudioLayerEditor({
                         onChange={(e) => updateLayer(layer.id, { fade_in_sec: Number(e.target.value) })}
                         placeholder="Fade in"
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100"
+                        title="Fade in duration for this audio layer."
                     />
                     <input
                         type="number"
@@ -127,6 +135,7 @@ export function AudioLayerEditor({
                         onChange={(e) => updateLayer(layer.id, { fade_out_sec: Number(e.target.value) })}
                         placeholder="Fade out"
                         className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100"
+                        title="Fade out duration for this audio layer."
                     />
                     <label className="flex items-center gap-2 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-200">
                         <input

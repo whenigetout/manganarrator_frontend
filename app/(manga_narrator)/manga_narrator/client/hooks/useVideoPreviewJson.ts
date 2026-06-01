@@ -21,6 +21,8 @@ interface BuildJobState {
     status: VideoJobResponse["status"];
     result?: VideoJobResponse["result"];
     error?: string;
+    startedAt: number;
+    finishedAt?: number;
 }
 
 const cloneDeep = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -30,6 +32,7 @@ export function useVideoPreviewJson(json_file: MediaRef | null) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [jobs, setJobs] = useState<Record<string, BuildJobState>>({});
+    const [mediaVersion, setMediaVersion] = useState(0);
 
     const imgPrwById = useMemo(() => {
         if (!data) return null;
@@ -75,11 +78,13 @@ export function useVideoPreviewJson(json_file: MediaRef | null) {
     };
 
     const pollJob = async (jobId: string, label: string) => {
+        const startedAt = Date.now();
         setJobs(prev => ({
             ...prev,
             [jobId]: {
                 label,
                 status: "processing",
+                startedAt,
             },
         }));
 
@@ -93,10 +98,14 @@ export function useVideoPreviewJson(json_file: MediaRef | null) {
                     status: status.status,
                     result: status.result,
                     error: status.error,
+                    startedAt,
+                    finishedAt: status.status === "processing" ? undefined : Date.now(),
                 },
             }));
 
             if (status.status !== "processing") {
+                setMediaVersion(prev => prev + 1);
+                await loadPreview();
                 return status;
             }
         }
@@ -123,6 +132,7 @@ export function useVideoPreviewJson(json_file: MediaRef | null) {
         loading,
         error,
         jobs,
+        mediaVersion,
         reload: loadPreview,
         updatePreview,
         saveEdits,

@@ -25,6 +25,9 @@ interface MangaImageProps {
     saveEditedPreview: () => Promise<void>;
     buildSegmentPreview: (segmentPreview: SegmentPreviewEditor) => Promise<void>;
     buildImagePreview: (imagePreview: ImagePreviewEditor) => Promise<void>;
+    mediaVersion: number;
+    missingDialogueIds?: Set<number>;
+    showMissingOnly?: boolean;
 }
 
 export const MangaImage = ({
@@ -40,6 +43,9 @@ export const MangaImage = ({
     saveEditedPreview,
     buildSegmentPreview,
     buildImagePreview,
+    mediaVersion,
+    missingDialogueIds = new Set<number>(),
+    showMissingOnly = false,
 }: MangaImageProps) => {
     type PreviewMode = "bbox" | "video";
 
@@ -51,11 +57,16 @@ export const MangaImage = ({
 
     const activeSegment = imagePreview?.base_timeline[activePreviewIdx] ?? null;
 
-    const previewVideoUrl = activeSegment
-        ? resolveMediaRef(activeSegment.out_file_ref)
-        : imagePreview
-            ? resolveMediaRef(imagePreview.out_file_ref)
-            : null;
+    const imageVideoUrl = imagePreview
+        ? `${resolveMediaRef(imagePreview.out_file_ref)}?v=${mediaVersion}`
+        : null;
+    const segmentVideoUrl = activeSegment
+        ? `${resolveMediaRef(activeSegment.out_file_ref)}?v=${mediaVersion}`
+        : null;
+
+    const visibleDialogueLines = image.dialogue_lines
+        .map((dlgLine, originalIdx) => ({ dlgLine, originalIdx }))
+        .filter(({ dlgLine }) => !showMissingOnly || missingDialogueIds.has(dlgLine.id));
 
     function nextActiveDlgIdx(
         deletedIdx: number,
@@ -123,6 +134,7 @@ export const MangaImage = ({
                 <button
                     onClick={() => setExpandAll(v => !v)}
                     className="text-xs px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700"
+                    title="Expand or collapse all dialogue-line editors for this image."
                 >
                     {expandAll ? "Collapse All" : "Expand All"}
                 </button>
@@ -132,6 +144,7 @@ export const MangaImage = ({
                     })}
                     disabled={busyLabel !== null}
                     className="text-xs px-2 py-1 rounded bg-amber-700 text-white hover:bg-amber-600 disabled:opacity-50"
+                    title="Regenerate the preview JSON for this image from the current OCR and dialogue audio state."
                 >
                     {imagePreview ? "Rebuild Preview from OCR" : "Generate Preview"}
                 </button>
@@ -140,6 +153,7 @@ export const MangaImage = ({
                         <button
                             onClick={() => setPreviewMode(previewMode === "bbox" ? "video" : "bbox")}
                             className="text-xs px-2 py-1 rounded bg-sky-700 text-white hover:bg-sky-600"
+                            title="Switch between raw bounding-box editing and the ffmpeg-accurate video preview for this image."
                         >
                             {previewMode === "bbox" ? "Switch to Video Preview" : "Switch to BBox Editor"}
                         </button>
@@ -147,6 +161,7 @@ export const MangaImage = ({
                             onClick={() => runBusy("save-preview-edits", saveEditedPreview)}
                             disabled={busyLabel !== null}
                             className="text-xs px-2 py-1 rounded bg-emerald-700 text-white hover:bg-emerald-600 disabled:opacity-50"
+                            title="Persist your current image and segment preview edits back into preview.json."
                         >
                             Save Preview Edits
                         </button>
@@ -156,7 +171,7 @@ export const MangaImage = ({
 
             <div className="grid grid-cols-[1fr_1.5fr] gap-6 px-6">
                 <div className="max-h-[calc(100vh-6rem)] overflow-y-auto min-w-0">
-                    {image.dialogue_lines.map((dlgLine, dlgIdx) => (
+                    {visibleDialogueLines.map(({ dlgLine, originalIdx }) => (
                         <ImageDialogueLine
                             key={dlgLine.id}
                             run_id={run_id}
@@ -164,12 +179,13 @@ export const MangaImage = ({
                             image_ref={image.image_info.image_ref}
                             dlgLine={dlgLine}
                             imageIdx={imageIdx}
-                            dlgIdx={dlgIdx}
+                            dlgIdx={originalIdx}
                             dispatchEdit={dispatchEdit}
                             forceExpand={expandAll}
                             onDlgClick={setActiveDlgIdx}
                             onDelete={handleDeleteDialogue}
                             activeDlgIdx={activeDlgIdx}
+                            missingAudio={missingDialogueIds.has(dlgLine.id)}
                         />
                     ))}
                 </div>
@@ -227,6 +243,7 @@ export const MangaImage = ({
                                                 onClick={() => runBusy("render-segment", () => buildSegmentPreview(activeSegment))}
                                                 disabled={busyLabel !== null}
                                                 className="rounded bg-cyan-700 px-3 py-2 text-xs text-white hover:bg-cyan-600 disabled:opacity-50"
+                                                title="Render just the currently selected segment clip using the current preview geometry and timing."
                                             >
                                                 Render Active Segment
                                             </button>
@@ -235,10 +252,23 @@ export const MangaImage = ({
                                             onClick={() => runBusy("render-image", () => buildImagePreview(imagePreview))}
                                             disabled={busyLabel !== null}
                                             className="rounded bg-indigo-700 px-3 py-2 text-xs text-white hover:bg-indigo-600 disabled:opacity-50"
+                                            title="Render the fully stitched video for this image using all included segments."
                                         >
                                             Render Full Image
                                         </button>
                                     </div>
+
+                                    {imageVideoUrl && (
+                                        <div className="space-y-2">
+                                            <div className="text-xs text-zinc-400">Image-level rendered video</div>
+                                            <video
+                                                key={imageVideoUrl}
+                                                src={imageVideoUrl}
+                                                controls
+                                                className="w-full rounded border border-zinc-800 bg-black"
+                                            />
+                                        </div>
+                                    )}
 
                                     {activeSegment && (
                                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -301,13 +331,18 @@ export const MangaImage = ({
                                         </div>
                                     )}
 
-                                    {previewVideoUrl && (
-                                        <video
-                                            key={previewVideoUrl}
-                                            src={previewVideoUrl}
-                                            controls
-                                            className="w-full rounded border border-zinc-800 bg-black"
-                                        />
+                                    {segmentVideoUrl && (
+                                        <details className="rounded border border-zinc-800 bg-zinc-900/70 p-3">
+                                            <summary className="cursor-pointer text-xs text-zinc-300">
+                                                Segment-level rendered clip
+                                            </summary>
+                                            <video
+                                                key={segmentVideoUrl}
+                                                src={segmentVideoUrl}
+                                                controls
+                                                className="mt-3 w-full rounded border border-zinc-800 bg-black"
+                                            />
+                                        </details>
                                     )}
                                 </div>
 

@@ -23,6 +23,7 @@ interface ImageDialogueLineProps {
     onDlgClick: (idx: number) => void
     onDelete: (dlgIdx: number) => void
     activeDlgIdx: number
+    missingAudio?: boolean
 }
 
 export const ImageDialogueLine = ({
@@ -36,7 +37,8 @@ export const ImageDialogueLine = ({
     forceExpand,
     onDlgClick,
     onDelete,
-    activeDlgIdx
+    activeDlgIdx,
+    missingAudio = false,
 }: ImageDialogueLineProps) => {
 
     const hasBbox = !!dlgLine.original_bbox
@@ -77,6 +79,11 @@ export const ImageDialogueLine = ({
                 {!hasBbox && (
                     <span className="text-xs px-2 py-0.5 rounded bg-amber-600/20 text-amber-300 border border-amber-500/40">
                         NO BBOX
+                    </span>
+                )}
+                {missingAudio && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-red-600/20 text-red-300 border border-red-500/40">
+                        MISSING AUDIO
                     </span>
                 )}
 
