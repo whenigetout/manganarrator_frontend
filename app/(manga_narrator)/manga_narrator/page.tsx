@@ -8,10 +8,6 @@ import { TestPageLink } from './dev/components/TestPageLink'
 import { useOcrJson } from './client/hooks/useOcrJson'
 import { MediaRef } from '@manganarrator/contracts'
 import { fileNameFromMediaRef, resolveMediaRef } from './utils/helpers'
-// import { Emotion } from './types/tts_api_types'
-
-// === Path Constants ===
-const MEDIA_ROOT = process.env.NEXT_PUBLIC_MEDIA_ROOT as string
 
 export default function MangaNarratorPage() {
     const [selectedImage, setSelectedImage] = useState<MediaRef | null>(null)
@@ -28,22 +24,26 @@ export default function MangaNarratorPage() {
 
     return (
         <div>
-
-
             <div className="p-6 max-w-4xl mx-auto">
                 <h1 className="text-2xl font-bold mb-4">📚 Manga Narrator: Load Chapter</h1>
                 <TestPageLink />
 
                 <OCRInputSectionClient
                     onSelectImage={setSelectedImage}
+                    onSelectOcrJson={setSelectedOcrJson}
                 />
+
+                {loading && <p className="mt-3 text-sm text-zinc-600">Loading OCR JSON...</p>}
+                {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
                 <OCROutputSectionClient
                     onSelectJson={setSelectedOcrJson}
                 />
             </div>
 
-            {ocrJsonData &&
-                <p>TEXT: {ocrJsonData.images[0].dialogue_lines[0].text}</p>}
+            {ocrJsonData && ocrJsonData.images[0]?.dialogue_lines[0] && (
+                <p>TEXT: {ocrJsonData.images[0].dialogue_lines[0].text}</p>
+            )}
 
             <div className="p-6">
                 {ocrJsonData && <NarrationWorkbenchClient
@@ -52,9 +52,6 @@ export default function MangaNarratorPage() {
                     saveJson={saveJson}
                     savePreview={savePreview}
                 />}
-                {/*
-                <VideoPreviewClient
-                /> */}
                 {selectedImage && (
                     <div className="mt-6">
                         <h2 className="text-lg font-semibold">
@@ -71,7 +68,6 @@ export default function MangaNarratorPage() {
                     </div>
                 )}
             </div>
-
         </div>
     )
 }

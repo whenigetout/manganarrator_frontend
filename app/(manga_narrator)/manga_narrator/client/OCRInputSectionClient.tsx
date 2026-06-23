@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import InputPathBreadcrumb from '../components/file_browsers/InputPathBreadcrumb'
 import RunOCRButton from '../components/file_browsers/RunOCRButton'
 import FolderBrowser from '../components/file_browsers/FolderBrowser'
@@ -9,16 +9,14 @@ import { callOCRapi } from '../server/callOCRapi'
 import { useDirectoryBrowser } from './hooks/useDirectoryBrowser'
 import { MediaRef, MediaNamespace } from '@manganarrator/contracts'
 
-const WSL_BASE = process.env.NEXT_PUBLIC_WSL_BASE as string
-const INPUT_ROOT = process.env.NEXT_PUBLIC_INPUT_ROOT || 'inputs'
-const OUTPUT_ROOT = process.env.NEXT_PUBLIC_OUTPUT_ROOT || 'outputs'
-
 interface OCRInputSectionClientProps {
     onSelectImage: (image: MediaRef | null) => void
+    onSelectOcrJson: (jsonFile: MediaRef | null) => void
 }
 
 const OCRInputSectionClient = ({
-    onSelectImage
+    onSelectImage,
+    onSelectOcrJson,
 }: OCRInputSectionClientProps) => {
     const {
         browserState,
@@ -27,23 +25,35 @@ const OCRInputSectionClient = ({
     } = useDirectoryBrowser(MediaNamespace.INPUTS);
 
     const [ocrStatus, setOcrStatus] = useState<OcrStatus>(OCR_STATUS.IDLE);
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
     const triggerOcr = async () => {
-        // setOcrStatus(OCR_STATUS.PROCESSING)
+        if (!browserState.currentDir.path) {
+            setStatusMessage("Open the chapter folder you want to OCR first.");
+            return;
+        }
 
-        // try {
-        //     const formData = new FormData()
-        //     formData.append(
-        //         'input_path',
-        //         `${WSL_BASE}/${constructFolderPath(INPUT_ROOT, ""?.path)}`
-        //     )
+        setOcrStatus(OCR_STATUS.PROCESSING);
+        setStatusMessage("Running OCR for the selected folder...");
 
-        //     const data = await callOCRapi(formData);
-        //     setOcrStatus(OCR_STATUS.DONE)
-        // } catch (err) {
-        //     console.error(err)
-        //     setOcrStatus(OCR_STATUS.ERROR)
-        // }
+        try {
+            const data = await callOCRapi(browserState.currentDir, {
+                attach_bboxes: true,
+                annotate_bboxes: false,
+            });
+
+            if (!data.ocr_json_file) {
+                throw new Error("OCR finished but did not return an OCR JSON file.");
+            }
+
+            onSelectOcrJson(data.ocr_json_file);
+            setOcrStatus(OCR_STATUS.DONE);
+            setStatusMessage(`OCR completed: ${data.count ?? 0} image(s).`);
+        } catch (err) {
+            console.error(err);
+            setOcrStatus(OCR_STATUS.ERROR);
+            setStatusMessage(err instanceof Error ? err.message : "OCR failed.");
+        }
     }
 
     return (
@@ -54,25 +64,36 @@ const OCRInputSectionClient = ({
                 onBack={() => {
                     goBack();
                     onSelectImage(null);
+                    onSelectOcrJson(null);
+                    setOcrStatus(OCR_STATUS.IDLE);
+                    setStatusMessage(null);
                 }}
             />
 
-            <RunOCRButton status={ocrStatus} onRun={triggerOcr} />
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+                <RunOCRButton
+                    status={ocrStatus}
+                    onRun={triggerOcr}
+                    disabled={!browserState.currentDir.path}
+                />
+                {statusMessage && (
+                    <span className={ocrStatus === OCR_STATUS.ERROR ? "text-sm text-red-600" : "text-sm text-zinc-600"}>
+                        {statusMessage}
+                    </span>
+                )}
+            </div>
 
-            {ocrStatus === 'done' && (
-                <span className="text-green-600 ml-2">✔ OCR completed</span>
-            )}
-            {ocrStatus === 'error' && (
-                <span className="text-red-600 ml-2">✖ OCR failed</span>
-            )}
-
-            {/* folder browser ui */}
             <FolderBrowser
                 folderBrowserTitle="Input Folders"
                 imageBrowserTitle="Images"
                 browserState={browserState}
-
-                onEnterFolder={goIntoFolder}
+                onEnterFolder={(folder) => {
+                    goIntoFolder(folder);
+                    onSelectImage(null);
+                    onSelectOcrJson(null);
+                    setOcrStatus(OCR_STATUS.IDLE);
+                    setStatusMessage(null);
+                }}
                 onSelectImage={onSelectImage}
             />
 
