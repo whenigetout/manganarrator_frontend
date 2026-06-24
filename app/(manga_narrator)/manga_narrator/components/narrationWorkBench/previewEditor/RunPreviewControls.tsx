@@ -9,6 +9,7 @@ interface RunPreviewControlsProps {
     onBuildFull: () => Promise<void>;
     onAddRunAudioLayer: () => void;
     onUpdateRunAudioLayers: (updater: (layers: VideoPreviewEditor["audio_layers"]) => VideoPreviewEditor["audio_layers"]) => void;
+    onUpdateRenderConfig: (updater: (cfg: NonNullable<VideoPreviewEditor["render_config"]>) => void) => void;
     selectionName: string;
     onSelectionNameChange: (value: string) => void;
     jobs: Record<string, { label: string; status: VideoJobResponse["status"]; result?: VideoJobResponse["result"]; error?: string; startedAt: number; finishedAt?: number }>;
@@ -27,6 +28,7 @@ export function RunPreviewControls({
     onBuildFull,
     onAddRunAudioLayer,
     onUpdateRunAudioLayers,
+    onUpdateRenderConfig,
     selectionName,
     onSelectionNameChange,
     jobs,
@@ -122,6 +124,25 @@ export function RunPreviewControls({
                 onAdd={onAddRunAudioLayer}
                 onChange={(next) => onUpdateRunAudioLayers(() => next)}
             />
+
+            {/* Global silent clip duration */}
+            <div className="flex items-center gap-3 rounded border border-zinc-800 bg-zinc-950/50 px-3 py-2">
+                <span className="text-xs text-zinc-400" title="Default display duration for all silent (text-less) segments. Can be overridden per-segment in the video editor.">
+                    Silent panel duration
+                </span>
+                <input
+                    id="global-silent-duration"
+                    type="number"
+                    min={0.5}
+                    step={0.5}
+                    value={preview.render_config?.default_silent_clip_duration ?? 3}
+                    onChange={(e) => onUpdateRenderConfig((cfg) => {
+                        cfg.default_silent_clip_duration = Number(e.target.value)
+                    })}
+                    className="w-20 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100"
+                />
+                <span className="text-xs text-zinc-500">s (global default)</span>
+            </div>
 
             <div className="rounded border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
                 <div className="text-xs text-zinc-400">

@@ -220,6 +220,9 @@ export const OcrJsonResult = ({
                 onUpdateRunAudioLayers={(updater) => updatePreview((draft) => {
                     draft.audio_layers = updater(draft.audio_layers ?? [])
                 })}
+                onUpdateRenderConfig={(updater) => updatePreview((draft) => {
+                    if (draft.render_config) updater(draft.render_config)
+                })}
             />
 
 
@@ -242,6 +245,7 @@ export const OcrJsonResult = ({
                     mediaVersion={mediaVersion}
                     missingDialogueIds={missingDialogueIds}
                     showMissingOnly={showMissingOnly}
+                    globalSilentDuration={videoPreview?.render_config?.default_silent_clip_duration ?? 3}
                     buildSegmentPreview={async (segmentPreview) => {
                         await runBusy(`build-segment-${segmentPreview.rendered_segment.segment.segment_id}`, async () => {
                             await buildSegment(segmentPreview)

@@ -28,6 +28,8 @@ interface MangaImageProps {
     mediaVersion: number;
     missingDialogueIds?: Set<number>;
     showMissingOnly?: boolean;
+    /** Global default silent clip duration from render_config */
+    globalSilentDuration?: number;
 }
 
 export const MangaImage = ({
@@ -46,6 +48,7 @@ export const MangaImage = ({
     mediaVersion,
     missingDialogueIds = new Set<number>(),
     showMissingOnly = false,
+    globalSilentDuration = 3,
 }: MangaImageProps) => {
     type PreviewMode = "bbox" | "video";
 
@@ -120,8 +123,16 @@ export const MangaImage = ({
     return (
         <div className="bg-zinc-900 rounded-lg p-4 shadow space-y-4">
             <div className="flex items-center justify-between gap-4">
-                <div className="text-sm text-zinc-400">
-                    Image · <span className="text-zinc-200">{fileNameFromMediaRef(image.image_info.image_ref)}</span>
+                <div className="flex items-center gap-2 text-sm text-zinc-400">
+                    <span>Image · <span className="text-zinc-200">{fileNameFromMediaRef(image.image_info.image_ref)}</span></span>
+                    {image.dialogue_lines.length === 0 && (
+                        <span
+                            className="rounded bg-zinc-700 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 tracking-wide"
+                            title="This image has no dialogue text. It will scroll silently in the final video."
+                        >
+                            SILENT PANEL
+                        </span>
+                    )}
                 </div>
                 {imagePreview && (
                     <div className="text-xs text-zinc-500">
@@ -208,6 +219,8 @@ export const MangaImage = ({
                                     activeIdx={activePreviewIdx}
                                     onPrev={() => setActivePreviewIdx(i => Math.max(0, i - 1))}
                                     onNext={() => setActivePreviewIdx(i => Math.min(imagePreview.base_timeline.length - 1, i + 1))}
+                                    globalSilentDuration={globalSilentDuration}
+                                    onUpdateSegment={(updater) => updateActiveSegment(updater)}
                                 />
 
                                 <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-4 space-y-4">

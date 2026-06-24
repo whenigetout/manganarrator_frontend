@@ -60,6 +60,8 @@ export interface SegmentPreviewEditor {
         audio_ref: MediaRef;
     }>;
     include_in_output?: boolean;
+    /** null = use global default_silent_clip_duration; set to override for this specific silent segment */
+    silent_duration_override?: number | null;
     audio_layers?: AudioLayer[];
     out_dir_ref: MediaRef;
     out_file_ref: MediaRef;
